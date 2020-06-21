@@ -1,11 +1,8 @@
 import pygame
 from pygame import display, event
 
-from board import Board
 import config
 
-board = Board(3, 5)
-grid = board.grid
 pieces = []
 player_turn = 1
 
@@ -28,7 +25,7 @@ running = True
 
 while running:
     events = event.get()
-    
+
     for e in events:
         if e.type == pygame.QUIT:
             running = False
