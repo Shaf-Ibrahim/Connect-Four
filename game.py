@@ -45,16 +45,6 @@ def print_board():
 def get_player_move(mouse_pos):
     return mouse_pos[0] // config.RECT_L
 
-# def is_valid_move(move):
-#     global board
-#     try:
-#         move = int(move)
-#         assert move >= 0 & move < config.BOARD_COLS
-#         return True
-#     except:
-#         print('Invalid move. Please input an int between 0-6.')
-#         return False
-
 def is_valid_location(move):
     global board
     return board[0][move] == 0
@@ -98,36 +88,28 @@ def check_win(player_turn):
 def _check_horizontal(player_turn, row):
     global board
     piece_count = 0
-    row_arr = board[row]
-    for piece, index in enumerate(row_arr):
-        if row_arr[index] == player_turn:
-            if piece_count == 4:
-                print('hor win found')
-                return True
+    for piece in board[row]:
+        if piece == player_turn:
             piece_count += 1
+            if piece_count == 4:
+                return True
         else:
             if piece_count != 0:
-                return False
+                piece_count = 0
+    return False
 
 def _check_vertical(player_turn, col):
     global board
     piece_count = 0
     for row in board:
         if row[col] == player_turn:
+            piece_count += 1
             if piece_count == 4:
                 return True
-            piece_count += 1
         else:
             if piece_count != 0:
-                return False
-
-def _check_consecutive(pieces):
-    pieces.sort(key=lambda piece:piece[0])
-    difference = 0
-    for pos, index in enumerate(pieces):
-        difference = pieces[0]
-
-    return True
+                piece_count = 0
+    return False
 
 def _check_pos_diagonal(player_turn, row, col):
     global board
@@ -219,10 +201,6 @@ winner = 0
 while running:
     events = event.get()
 
-    if check_win(player_turn):
-        winner = player_turn
-        break
-
     hover_circle(pygame.mouse.get_pos(), player_turn)
 
     for e in events:
@@ -235,8 +213,12 @@ while running:
 
         if e.type == pygame.MOUSEBUTTONDOWN:
             move = get_player_move(pygame.mouse.get_pos())
-            if is_valid_move(move):
+            if is_valid_location(move):
                 place_piece(player_turn, move)
             else:
                 error_message(player_turn, move)
+            if check_win(player_turn):
+                winner = player_turn
+                screen.fill((255, 255, 255))
+                break
             player_turn = 1 if player_turn == 2 else 2
