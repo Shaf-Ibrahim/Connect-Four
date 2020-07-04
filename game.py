@@ -1,6 +1,6 @@
 import pygame
 from pygame import display, event
-import os, time
+import asyncio
 
 import config
 
@@ -14,6 +14,11 @@ pygame.init()
 display.set_caption('Connect Four')
 
 screen = display.set_mode((config.SCREEN_SIZE, config.SCREEN_SIZE))
+clock = pygame.time.Clock()
+
+#################################################
+# Initialization
+#################################################
 
 def init_board():
     global board
@@ -23,7 +28,19 @@ def init_board():
             row.append(0)
         board.append(row)
 
-def create_board():
+def print_board():
+    global board
+    print(board)
+
+def init():
+    init_board()
+    draw_screen()
+
+#################################################
+# Drawing
+#################################################
+
+def draw_screen():
     global board
     # Draw blue squares
     for row in range(config.BOARD_ROWS):
@@ -40,9 +57,49 @@ def create_board():
                               config.RADIUS)
     display.update()
 
-def print_board():
+async def animate_piece(piece, player_turn):
+    piece_row = piece[0]
+    piece_col = piece[1]
+    row = 0
+    color = config.RED if player_turn == 1 else config.YELLOW
+    clock = pygame.time.Clock()
+    time = 0
+    while(row < piece_row):
+        draw_screen()
+        pygame.draw.circle(screen, color,
+                      (int(piece_col * config.RECT_L + config.RECT_L/2), int(row * config.RECT_L + config.RECT_L + config.RECT_L/2)),
+                      config.RADIUS)
+        row += 1
+        display.update()
+        await asyncio.sleep(1)
+
+def draw_pieces(piece):
+    # Dont draw the piece given
     global board
-    print(board)
+    global player_turn
+    for row in range(config.BOARD_ROWS):
+        for col in range(config.BOARD_COLS):
+            if board[row][col] != 0 and (row, col) != piece:
+                color = config.RED if board[row][col] == 1 else config.YELLOW
+                pygame.draw.circle(screen, color,
+                              (int(col * config.RECT_L + config.RECT_L/2), int(row * config.RECT_L + config.RECT_L + config.RECT_L/2)),
+                              config.RADIUS)
+
+def hover_circle(mouse_pos):
+    global player_turn
+    pygame.draw.rect(screen, config.BLACK,
+                    (0, 0, config.BOARD_COLS * config.RECT_L, config.RECT_H))
+    display.update()
+    color = config.RED if player_turn == 1 else config.YELLOW
+    mouse_pos = pygame.mouse.get_pos()
+    hover_col = mouse_pos[0] // config.RECT_L
+    center_pos = (config.RECT_L * hover_col + config.RECT_L // 2, config.RECT_H // 2)
+    pygame.draw.circle(screen, color, center_pos, config.RADIUS)
+    display.update()
+
+#################################################
+# Piece placement
+#################################################
 
 def get_player_move(mouse_pos):
     return mouse_pos[0] // config.RECT_L
@@ -51,11 +108,11 @@ def is_valid_location(move):
     global board
     return board[0][move] == 0
 
+# Returns tuple of position of piece that was just placed
 def place_piece(move):
     global player_turn
     row = _get_row(move)
-    draw_piece(row, move)
-    return
+    return (row, move)
 
 def _get_row(move):
     global board
@@ -67,17 +124,51 @@ def _get_row(move):
     board[row][move] = player_turn
     return row
 
-def draw_piece(row, col):
-    global player_turn
-    color = config.RED if player_turn == 1 else config.YELLOW
-    pygame.draw.circle(screen, color,
-                      (int(col * config.RECT_L + config.RECT_L/2), int(row * config.RECT_L + config.RECT_L + config.RECT_L/2)),
-                      config.RADIUS)
+# def draw_piece(row, col):
+#     global player_turn
+#     color = config.RED if player_turn == 1 else config.YELLOW
+#     pygame.draw.circle(screen, color,
+#                       (int(col * config.RECT_L + config.RECT_L/2), int(row * config.RECT_L + config.RECT_L + config.RECT_L/2)),
+#                       config.RADIUS)
 
-def drop_animation(start_pos, end_pos):
-    global player_turn
-    pass
 
+#################################################
+# Text messages
+#################################################
+def make_text():
+    font = pygame.font.Font(None, 64)
+    text = font.render('Piece placed', True, config.RED)
+    screen.blit(text, (0,0))
+    display.update()
+    return
+
+def error_message():
+    global clock
+    # font = pygame.font.Font(None, 64)
+    # orig_surf = font.render('Enter your text', True, blue)
+    # txt_surf = orig_surf.copy()
+    # # This surface is used to adjust the alpha of the txt_surf.
+    # alpha_surf = pygame.Surface(txt_surf.get_size(), pygame.SRCALPHA)
+    # alpha = 255  # The current alpha value of the surface.
+    #
+    # if alpha > 0:
+    #     # Reduce alpha each frame, but make sure it doesn't get below 0.
+    #     alpha = max(alpha-4, 0)
+    #     txt_surf = orig_surf.copy()  # Don't modify the original text surf.
+    #     # Fill alpha_surf with this color to set its alpha value.
+    #     alpha_surf.fill((255, 255, 255, alpha))
+    #     # To make the text surface transparent, blit the transparent
+    #     # alpha_surf onto it with the BLEND_RGBA_MULT flag.
+    #     txt_surf.blit(alpha_surf, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
+
+    screen.fill((30, 30, 30))
+    screen.blit(txt_surf, (30, 60))
+    display.flip()
+    clock.tick(30)
+
+#################################################
+# Check win
+#################################################
 def check_win():
     global board
     global player_turn
@@ -176,50 +267,12 @@ def _check_neg_diagonal(row, col):
         colIter += 1
     return False
 
-def init():
-    init_board()
-    create_board()
-
-def hover_circle(mouse_pos):
-    global player_turn
-    pygame.draw.rect(screen, config.BLACK,
-                    (0, 0, config.BOARD_COLS * config.RECT_L, config.RECT_H))
-    display.update()
-    color = config.RED if player_turn == 1 else config.YELLOW
-    mouse_pos = pygame.mouse.get_pos()
-    hover_col = mouse_pos[0] // config.RECT_L
-    center_pos = (config.RECT_L * hover_col + config.RECT_L // 2, config.RECT_H // 2)
-    pygame.draw.circle(screen, color, center_pos, config.RADIUS)
-    display.update()
-
-def error_message():
-    clock = pygame.time.Clock()
-    font = pygame.font.Font(None, 64)
-    blue = pygame.Color('royalblue')
-    orig_surf = font.render('Enter your text', True, blue)
-    txt_surf = orig_surf.copy()
-    # This surface is used to adjust the alpha of the txt_surf.
-    alpha_surf = pygame.Surface(txt_surf.get_size(), pygame.SRCALPHA)
-    alpha = 255  # The current alpha value of the surface.
-
-    if alpha > 0:
-        # Reduce alpha each frame, but make sure it doesn't get below 0.
-        alpha = max(alpha-4, 0)
-        txt_surf = orig_surf.copy()  # Don't modify the original text surf.
-        # Fill alpha_surf with this color to set its alpha value.
-        alpha_surf.fill((255, 255, 255, alpha))
-        # To make the text surface transparent, blit the transparent
-        # alpha_surf onto it with the BLEND_RGBA_MULT flag.
-        txt_surf.blit(alpha_surf, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
-
-    screen.fill((30, 30, 30))
-    screen.blit(txt_surf, (30, 60))
-    pygame.display.flip()
-    clock.tick(30)
+#################################################
+# Game start
+#################################################
 
 init()
 
-# GUI
 while running:
     events = event.get()
 
@@ -236,8 +289,10 @@ while running:
         if e.type == pygame.MOUSEBUTTONDOWN:
             move = get_player_move(pygame.mouse.get_pos())
             if is_valid_location(move):
-                place_piece(move)
-                text = font.render('Piece placed', True, config.RED)
+                piece = place_piece(move)
+                draw_pieces(piece)
+                animate_piece(piece, player_turn)
+                # make_text()
             else:
                 while not is_valid_location(move):
                     error_message()
