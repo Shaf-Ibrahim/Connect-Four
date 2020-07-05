@@ -2,6 +2,8 @@ import math
 
 SCREEN_SIZE = 768
 
+FPS = 60
+
 BLACK = (0, 0, 0)
 BLUE = (0, 0, 255)
 RED = (255, 0, 0)

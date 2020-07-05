@@ -57,33 +57,36 @@ def draw_screen():
                               config.RADIUS)
     display.update()
 
-async def animate_piece(piece, player_turn):
-    piece_row = piece[0]
-    piece_col = piece[1]
-    row = 0
-    color = config.RED if player_turn == 1 else config.YELLOW
-    clock = pygame.time.Clock()
-    time = 0
-    while(row < piece_row):
-        draw_screen()
-        pygame.draw.circle(screen, color,
-                      (int(piece_col * config.RECT_L + config.RECT_L/2), int(row * config.RECT_L + config.RECT_L + config.RECT_L/2)),
-                      config.RADIUS)
-        row += 1
-        display.update()
-        await asyncio.sleep(1)
+# def animate_piece(piece, player_turn):
+#     piece_row = piece[0]
+#     piece_col = piece[1]
+#     row = 0
+#     color = config.RED if player_turn == 1 else config.YELLOW
+#     clock = pygame.time.Clock()
+#     pygame.draw.circle(screen, color,
+#                       (int(piece_col * config.RECT_L + config.RECT_L/2), int(row * config.RECT_L + config.RECT_L + config.RECT_L/2)),
+#                       config.RADIUS)
+#
+    # while(row < piece_row):
+    #     draw_screen()
+    #     pygame.draw.circle(screen, color,
+    #                   (int(piece_col * config.RECT_L + config.RECT_L/2), int(row * config.RECT_L + config.RECT_L + config.RECT_L/2)),
+    #                   config.RADIUS)
+    #     row += 1
+    #     display.update()
+        # await asyncio.sleep(1)
 
-def draw_pieces(piece):
-    # Dont draw the piece given
-    global board
-    global player_turn
-    for row in range(config.BOARD_ROWS):
-        for col in range(config.BOARD_COLS):
-            if board[row][col] != 0 and (row, col) != piece:
-                color = config.RED if board[row][col] == 1 else config.YELLOW
-                pygame.draw.circle(screen, color,
-                              (int(col * config.RECT_L + config.RECT_L/2), int(row * config.RECT_L + config.RECT_L + config.RECT_L/2)),
-                              config.RADIUS)
+# def draw_pieces(piece):
+#     # Dont draw the piece given
+#     global board
+#     global player_turn
+#     for row in range(config.BOARD_ROWS):
+#         for col in range(config.BOARD_COLS):
+#             if (row, col) != piece:
+#                 color = config.RED if board[row][col] == 1 else config.YELLOW
+#                 pygame.draw.circle(screen, color,
+#                                   (int(col * config.RECT_L + config.RECT_L/2), int(row * config.RECT_L + config.RECT_L + config.RECT_L/2)),
+#                                   config.RADIUS)
 
 def hover_circle(mouse_pos):
     global player_turn
@@ -124,12 +127,13 @@ def _get_row(move):
     board[row][move] = player_turn
     return row
 
-# def draw_piece(row, col):
-#     global player_turn
-#     color = config.RED if player_turn == 1 else config.YELLOW
-#     pygame.draw.circle(screen, color,
-#                       (int(col * config.RECT_L + config.RECT_L/2), int(row * config.RECT_L + config.RECT_L + config.RECT_L/2)),
-#                       config.RADIUS)
+def draw_piece(pos):
+    global player_turn
+    row, col = pos
+    color = config.RED if player_turn == 1 else config.YELLOW
+    pygame.draw.circle(screen, color,
+                      (int(col * config.RECT_L + config.RECT_L/2), int(row * config.RECT_L + config.RECT_L + config.RECT_L/2)),
+                      config.RADIUS)
 
 
 #################################################
@@ -289,9 +293,10 @@ while running:
         if e.type == pygame.MOUSEBUTTONDOWN:
             move = get_player_move(pygame.mouse.get_pos())
             if is_valid_location(move):
-                piece = place_piece(move)
-                draw_pieces(piece)
-                animate_piece(piece, player_turn)
+                pos = place_piece(move)
+                draw_piece(pos)
+                # draw_pieces(pos)
+                # animate_piece(piece, player_turn)
                 # make_text()
             else:
                 while not is_valid_location(move):
