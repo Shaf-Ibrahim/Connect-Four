@@ -43,11 +43,14 @@ def init():
 def draw_screen():
     global board
     # Draw blue squares
-    for row in range(config.BOARD_ROWS):
-        for col in range(config.BOARD_COLS):
-            pygame.draw.rect(screen, config.BLUE,
-                            (col * config.RECT_H, row * config.RECT_L + config.RECT_L,
-                            config.RECT_H, config.RECT_L))
+    # for row in range(config.BOARD_ROWS):
+    #     for col in range(config.BOARD_COLS):
+    #         pygame.draw.rect(screen, config.BLUE,
+    #                         (col * config.RECT_H, row * config.RECT_L + config.RECT_L,
+    #                         config.RECT_H, config.RECT_L))
+    pygame.draw.rect(screen, config.BLUE,
+                     (0, config.RECT_H,
+                     config.RECT_H * config.BOARD_ROWS, config.RECT_L * config.BOARD_COLS))
 
     # Draw black holes where pieces will be placed
     for row in range(config.BOARD_ROWS):
